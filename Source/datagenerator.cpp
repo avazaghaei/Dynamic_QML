@@ -39,7 +39,7 @@ bool DataGenerator::isRunning() const
 
 void DataGenerator::generateValue()
 {
-    int current = QRandomGenerator::global()->bounded(m_min, m_max + 1);
-    qDebug() << m_id << "value changed to" << current;
-    emit signalValueChanged(current);
+    int newValue = QRandomGenerator::global()->bounded(m_min, m_max + 1);
+    qDebug() << m_id << "value changed to" << newValue;
+    emit signalValueChanged(newValue);
 }

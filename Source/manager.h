@@ -43,8 +43,9 @@ private:
 private:
     void getInputFileAddress();
     void checkInputFileAddress();
-    bool loadBackendConfig(const QString &path);
-    bool loadFrontendConfig(const QString &path);
+    bool loadBackendConfig();
+    QJsonDocument checkFile(const QString &path);
+    bool loadFrontendConfig();
     void initUiComponents();
 
 public:

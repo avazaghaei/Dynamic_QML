@@ -7,8 +7,8 @@ Manager::Manager(QQmlEngine *engine, QObject *rootObject, QObject *parent)
     getInputFileAddress();
     checkInputFileAddress();
 
-    loadBackendConfig(backendConfig);
-    loadFrontendConfig(frontendConfig);
+    loadBackendConfig();
+    loadFrontendConfig();
 
     initUiComponents();
 
@@ -17,7 +17,8 @@ Manager::Manager(QQmlEngine *engine, QObject *rootObject, QObject *parent)
 Manager::~Manager()
 {
     // Clean up listGenerators
-    for (auto generator : listGenerators) {
+    for (auto generator : listGenerators)
+    {
         if (generator) {
             generator->stop();
             generator->deleteLater();
@@ -29,8 +30,8 @@ Manager::~Manager()
 void Manager::getInputFileAddress()
 {
     // Use relative paths and check if files exist
-    backendConfig = QDir::currentPath() + "/configs/backend_5.json";
-    frontendConfig = QDir::currentPath() + "/configs/frontend_5.json";
+    backendConfig   = QDir::currentPath() + "/configs/backend_5.json";
+    frontendConfig  = QDir::currentPath() + "/configs/frontend_5.json";
 }
 
 void Manager::checkInputFileAddress()
@@ -43,21 +44,11 @@ void Manager::checkInputFileAddress()
         qWarning() << "Frontend config file not found:" << frontendConfig;
 }
 
-bool Manager::loadBackendConfig(const QString &path)
+bool Manager::loadBackendConfig()
 {
-    QFile f(path);
-    if (!f.open(QIODevice::ReadOnly))
-    {
-        qWarning() << "Failed to open backend config:" << path;
+    QJsonDocument doc = checkFile(backendConfig);
+    if(doc.isNull())
         return false;
-    }
-
-    auto doc = QJsonDocument::fromJson(f.readAll());
-    if (!doc.isArray())
-    {
-        qWarning() << "Backend config should be a JSON array";
-        return false;
-    }
 
     for (const auto &v : doc.array())
     {
@@ -85,34 +76,42 @@ bool Manager::loadBackendConfig(const QString &path)
     return true;
 }
 
-bool Manager::loadFrontendConfig(const QString &path)
+QJsonDocument Manager::checkFile(const QString &path)
 {
-    frontendConfigPath = path;
-    qDebug() << "Frontend config path set to:" << path;
+    if (path.isEmpty())
+    {
+        qWarning() << "No frontend config path set";
+        return {};
+    }
+
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly))
+    {
+        qWarning() << "Failed to open backend config:" << path;
+        return {};
+    }
+
+    QJsonDocument doc = QJsonDocument::fromJson(f.readAll());
+    if (!doc.isArray())
+    {
+        qWarning() << "config should be a JSON array";
+        return {};
+    }
+    return doc;
+}
+
+bool Manager::loadFrontendConfig()
+{
+    frontendConfigPath = frontendConfig;
+    qDebug() << "Frontend config path set to:" << frontendConfig;
     return true;
 }
 
 void Manager::initUiComponents()
-{
-    if (frontendConfigPath.isEmpty())
-    {
-        qWarning() << "No frontend config path set";
+{ 
+    QJsonDocument doc = checkFile(frontendConfig);
+    if(doc.isNull())
         return;
-    }
-
-    QFile f(frontendConfigPath);
-    if (!f.open(QIODevice::ReadOnly))
-    {
-        qWarning() << "Failed to open frontend config file:" << frontendConfigPath;
-        return;
-    }
-
-    auto doc = QJsonDocument::fromJson(f.readAll());
-    if (!doc.isArray())
-    {
-        qWarning() << "Frontend config should be an array";
-        return;
-    }
 
     // Find the container for items
     QObject *parentForItems = rootObject->findChild<QObject*>("rootItem");
@@ -222,33 +221,43 @@ void Manager::initUiComponents()
 void Manager::slotHandleItemXChanged()
 {
     QObject *item = sender();
-    if (!item) return;
+    if (!item)
+        return;
 
     double x = item->property("x").toDouble();
+
     double rootWidth = rootObject->property("width").toDouble();
     double halfWidth = rootWidth / 2.0;
 
     // Find the item description
     ItemDesc *foundDesc = nullptr;
-    for (auto &desc : items) {
-        if (desc.qmlItem == item) {
+    for (auto &desc : items)
+    {
+        if (desc.qmlItem == item)
+        {
             foundDesc = &desc;
             break;
         }
     }
 
-    if (!foundDesc || !listGenerators.contains(foundDesc->dataSource)) {
+    if (!foundDesc || !listGenerators.contains(foundDesc->dataSource))
+    {
         return;
     }
 
     DataGenerator *gen = listGenerators.value(foundDesc->dataSource);
-    if (x >= halfWidth) {
-        if (gen->isRunning()) {
+    if (x >= halfWidth)
+    {
+        if (gen->isRunning())
+        {
             gen->stop();
             qInfo() << "Paused generator" << foundDesc->dataSource << "for item" << foundDesc->id << "(x=" << x << ")";
         }
-    } else {
-        if (!gen->isRunning()) {
+    }
+    else
+    {
+        if (!gen->isRunning())
+        {
             gen->start();
             qInfo() << "Resumed generator" << foundDesc->dataSource << "for item" << foundDesc->id << "(x=" << x << ")";
         }
