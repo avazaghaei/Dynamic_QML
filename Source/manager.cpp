@@ -147,7 +147,7 @@ QObject* Manager::findRootQmlItem()
 QQmlComponent *Manager::initQmlComponent()
 {
     // Create component
-    QQmlComponent* component = new QQmlComponent(qmlEngine, QUrl(QStringLiteral("qrc:/MovableBox.qml")));
+    QQmlComponent* component = new QQmlComponent(qmlEngine, QUrl(QStringLiteral("qrc:/MovableBox.qml"))); //class definition  //A template or blueprint of MovableBox.qml
     if (component->isError())
     {
         qWarning() << "Failed to load MovableBox.qml:" << component->errors();
@@ -185,7 +185,7 @@ void Manager::readFrontendJson(QJsonDocument doc)
             continue;
         }
 
-        QObject *objInstance = makeQmlObject(id, x, y, colorHex, dataSource);
+        QObject *objInstance = makeQmlObject(id, x, y, colorHex, dataSource);   //An actual instance of MovableBox
         if(objInstance == nullptr)
             continue;
 

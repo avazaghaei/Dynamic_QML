@@ -15,7 +15,7 @@ int main(int argc, char **argv)
     if (engine.rootObjects().isEmpty()) // Checks if QML loaded successfully
         return -1;
 
-    QObject *rootObj = engine.rootObjects().first();    // Gets the root QML object
+    QObject *rootObj = engine.rootObjects().first();    // Gets the root QML object //window
 
     Manager manager(&engine, rootObj);                  // Creates manager to handle C++-QML integration
 
