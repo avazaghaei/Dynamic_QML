@@ -30,7 +30,7 @@ private:
 
     QQmlEngine *qmlEngine;
     QObject *rootObject;
-    QMap<QString, DataGenerator*> generators;
+    QMap<QString, DataGenerator*> listGenerators;
     QList<ItemDesc> items;
     QString frontendConfigPath;
 
@@ -39,7 +39,7 @@ private:
     void checkInputFileAddress();
     bool loadBackendConfig(const QString &path);
     bool loadFrontendConfig(const QString &path);
-    void instantiateUIComponents();
+    void initUiComponents();
 
 public:
     explicit Manager(QQmlEngine *engine, QObject *rootObject, QObject *parent = nullptr);

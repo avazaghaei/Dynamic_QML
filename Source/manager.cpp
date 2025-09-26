@@ -17,20 +17,20 @@ Manager::Manager(QQmlEngine *engine, QObject *rootObject, QObject *parent)
     loadBackendConfig(backendConfig);
     loadFrontendConfig(frontendConfig);
 
-    instantiateUIComponents();
+    initUiComponents();
 
 }
 
 Manager::~Manager()
 {
-    // Clean up generators
-    for (auto generator : generators) {
+    // Clean up listGenerators
+    for (auto generator : listGenerators) {
         if (generator) {
             generator->stop();
             generator->deleteLater();
         }
     }
-    generators.clear();
+    listGenerators.clear();
 }
 
 void Manager::getInputFileAddress()
@@ -81,14 +81,14 @@ bool Manager::loadBackendConfig(const QString &path)
         if (id.isEmpty())
             continue;
 
-        DataGenerator* gen = new DataGenerator(id, msec, min, max, this);
-        gen->start();
-        generators.insert(id, gen);
+        DataGenerator* newGenerator = new DataGenerator(id, msec, min, max, this);
+        newGenerator->start();
+        listGenerators.insert(id, newGenerator);
 
         qDebug() << "Created generator:" << id << "interval:" << msec << "min:" << min << "max:" << max;
     }
 
-    qInfo() << "Loaded backend generators:" << generators.keys();
+    qInfo() << "Loaded backend listGenerators:" << listGenerators.keys();
     return true;
 }
 
@@ -99,7 +99,7 @@ bool Manager::loadFrontendConfig(const QString &path)
     return true;
 }
 
-void Manager::instantiateUIComponents()
+void Manager::initUiComponents()
 {
     if (frontendConfigPath.isEmpty())
     {
@@ -202,9 +202,9 @@ void Manager::instantiateUIComponents()
         }
 
         // Connect backend generator
-        if (generators.contains(dataSource))
+        if (listGenerators.contains(dataSource))
         {
-            DataGenerator *gen = generators.value(dataSource);
+            DataGenerator *gen = listGenerators.value(dataSource);
             connect(gen, &DataGenerator::signalValueChanged, this,
                     [objInstance, qid](int newVal){
                         objInstance->setProperty("displayText", QString::number(newVal));
@@ -246,11 +246,11 @@ void Manager::slotHandleItemXChanged()
         }
     }
 
-    if (!foundDesc || !generators.contains(foundDesc->dataSource)) {
+    if (!foundDesc || !listGenerators.contains(foundDesc->dataSource)) {
         return;
     }
 
-    DataGenerator *gen = generators.value(foundDesc->dataSource);
+    DataGenerator *gen = listGenerators.value(foundDesc->dataSource);
     if (x >= halfWidth) {
         if (gen->isRunning()) {
             gen->stop();
