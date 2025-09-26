@@ -2,10 +2,10 @@ import QtQuick
 
 Rectangle {
     id: box
-    property string objectId: ""
-    property string dataSource: ""
-    property string colorHex: "#4ab471"
-    property string displayText: "—"
+    property string objectId: ""        // Set by C++
+    property string dataSource: ""      // Set by C++
+    property string colorHex: "#4ab471" // Set by C++
+    property string displayText: "—"    // Updated by C++
     width: 120
     height: 60
     visible: true
@@ -16,12 +16,12 @@ Rectangle {
     opacity: 0.95
 
     property real dx: 3
-    property real windowWidth: parent ? parent.width : 800
+    property real windowWidth: parent ? parent.width : 800  // Dynamic boundary
 
     Text {
         id: label
         anchors.centerIn: parent
-        text: displayText
+        text: displayText           // Shows generated number
         font.pixelSize: 18
         color: "white"
         font.bold: true

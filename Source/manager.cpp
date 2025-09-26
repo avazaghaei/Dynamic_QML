@@ -7,13 +7,13 @@ Manager::Manager(QQmlEngine *engine, QObject *rootObject, QObject *parent)
     getInputFileAddress();
     checkInputFileAddress();
 
-    if(!loadBackendConfig())
+    if(!loadBackendConfig())    // Step 1: Create data generators
         return;
 
-    if(!loadFrontendConfig())
+    if(!loadFrontendConfig())   // Step 2: Set frontend config
         return;
 
-    if(!initUiComponents())
+    if(!initUiComponents())     // Step 3: Create QML components
         return;
 
 }
@@ -200,7 +200,7 @@ void Manager::readFrontendJson(QJsonDocument doc)
 
 QObject* Manager::makeQmlObject(QString id, double x, double y, QString colorHex, QString dataSource)
 {
-    QObject *objInstance = component->create(context);
+    QObject *objInstance = component->create(context);  // Creates QML instance from template
 
     if (!objInstance)
     {
@@ -220,7 +220,7 @@ QObject* Manager::makeQmlObject(QString id, double x, double y, QString colorHex
     objInstance->setProperty("dataSource", dataSource);
     objInstance->setProperty("displayText", "0");
 
-    // Connect signals
+    // Connects QML signal to C++ slot
     connect(objInstance, SIGNAL(xChanged()), this, SLOT(slotHandleItemXChanged()));
 
     return objInstance;
@@ -235,7 +235,7 @@ void Manager::trackQmlObkect(QObject* objInstance, QString id, QString dataSourc
     desc.dataSource = dataSource;
     items.append(desc);
 
-    // Connect backend generator
+    // Connect backend generator to QML
     if (listGenerators.contains(dataSource))
     {
         DataGenerator *gen = listGenerators.value(dataSource);
@@ -253,7 +253,7 @@ void Manager::trackQmlObkect(QObject* objInstance, QString id, QString dataSourc
 
 void Manager::slotHandleItemXChanged()
 {
-    QObject *item = sender();
+    QObject *item = sender();   // Gets which QML item triggered the signal
     if (!item)
         return;
 
