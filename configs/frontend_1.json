@@ -1,9 +1,9 @@
 [
-  {
-    "id": "box_1_1",
-    "x": 20,
-    "y": 20,
-    "color-hex": "#4ab471",
-    "dataSource": "data_1_1"
-  }
+    {
+        "id": "box1",
+        "x": 100,
+        "y": 100,
+        "color-hex": "#FF5733",
+        "dataSource": "generator1"
+    }
 ]
