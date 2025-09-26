@@ -1,0 +1,235 @@
+#include "manager.h"
+#include "datagenerator.h"
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QVariant>
+#include <QDebug>
+#include <QMetaObject>
+
+Manager::Manager(QQmlEngine *engine, QObject *rootObject, QObject *parent)
+    : QObject(parent), qmlEngine(engine), rootObject(rootObject)
+{}
+
+Manager::~Manager()
+{
+    // Clean up generators
+    for (auto generator : generators) {
+        if (generator) {
+            generator->stop();
+            generator->deleteLater();
+        }
+    }
+    generators.clear();
+}
+
+bool Manager::loadBackendConfig(const QString &path)
+{
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly))
+    {
+        qWarning() << "Failed to open backend config:" << path;
+        return false;
+    }
+
+    auto doc = QJsonDocument::fromJson(f.readAll());
+    if (!doc.isArray())
+    {
+        qWarning() << "Backend config should be a JSON array";
+        return false;
+    }
+
+    for (const auto &v : doc.array())
+    {
+        if (!v.isObject()) continue;
+
+        QJsonObject obj = v.toObject();
+        QString id = obj.value("id").toString();
+        int msec = obj.value("msec").toInt(1000);
+        int minv = obj.value("min").toInt(0);
+        int maxv = obj.value("max").toInt(100);
+
+        if (id.isEmpty()) continue;
+
+        auto gen = new DataGenerator(id, msec, minv, maxv, this);
+        gen->start();
+        generators.insert(id, gen);
+        qDebug() << "Created generator:" << id << "interval:" << msec << "min:" << minv << "max:" << maxv;
+    }
+
+    qInfo() << "Loaded backend generators:" << generators.keys();
+    return true;
+}
+
+bool Manager::loadFrontendConfig(const QString &path)
+{
+    frontendConfigPath = path;
+    qDebug() << "Frontend config path set to:" << path;
+    return true;
+}
+
+void Manager::instantiateUIComponents()
+{
+    if (frontendConfigPath.isEmpty())
+    {
+        qWarning() << "No frontend config path set";
+        return;
+    }
+
+    QFile f(frontendConfigPath);
+    if (!f.open(QIODevice::ReadOnly))
+    {
+        qWarning() << "Failed to open frontend config file:" << frontendConfigPath;
+        return;
+    }
+
+    auto doc = QJsonDocument::fromJson(f.readAll());
+    if (!doc.isArray())
+    {
+        qWarning() << "Frontend config should be an array";
+        return;
+    }
+
+    // Find the container for items
+    QObject *parentForItems = rootObject->findChild<QObject*>("rootItem");
+    if (!parentForItems)
+    {
+        qWarning() << "Could not find rootItem, searching for alternative container...";
+        // Try to find any suitable container
+        parentForItems = rootObject;
+    }
+
+    qDebug() << "Using parent for items:" << parentForItems->objectName()
+             << "Type:" << parentForItems->metaObject()->className()
+             << "Width:" << parentForItems->property("width").toDouble();
+
+    for (const auto &v : doc.array())
+    {
+        if (!v.isObject()) continue;
+
+        QJsonObject obj = v.toObject();
+        QString qid = obj.value("id").toString();
+        double x = obj.value("x").toDouble(0);
+        double y = obj.value("y").toDouble(0);
+        QString colorHex = obj.value("color-hex").toString("#4ab471");
+        QString dataSource = obj.value("dataSource").toString();
+
+        if (qid.isEmpty()) {
+            qWarning() << "Skipping item with empty id";
+            continue;
+        }
+
+        qDebug() << "Creating box:" << qid << "at (" << x << "," << y << ")";
+
+        // Create component
+        QQmlComponent component(qmlEngine, QUrl(QStringLiteral("qrc:/MovableBox.qml")));
+        if (component.isError())
+        {
+            qWarning() << "Failed to load MovableBox.qml:" << component.errors();
+            continue;
+        }
+
+        // Create object with parent context
+        QQmlContext *context = new QQmlContext(qmlEngine->rootContext());
+        QObject *objInstance = component.create(context);
+
+        if (!objInstance)
+        {
+            qWarning() << "Failed to create MovableBox instance for" << qid;
+            delete context;
+            continue;
+        }
+
+        // CRITICAL: Set the visual parent using QML engine method
+        objInstance->setProperty("parent", QVariant::fromValue(parentForItems));
+
+        // Set properties
+        objInstance->setProperty("objectId", qid);
+        objInstance->setProperty("x", x);
+        objInstance->setProperty("y", y);
+        objInstance->setProperty("colorHex", colorHex);
+        objInstance->setProperty("dataSource", dataSource);
+        objInstance->setProperty("displayText", "0");
+
+        // Verify properties were set
+        qDebug() << "Box created - x:" << objInstance->property("x").toDouble()
+                 << "y:" << objInstance->property("y").toDouble()
+                 << "visible:" << objInstance->property("visible").toBool()
+                 << "color:" << objInstance->property("colorHex").toString();
+
+        // Track the item
+        ItemDesc desc;
+        desc.qmlItem = objInstance;
+        desc.id = qid;
+        desc.dataSource = dataSource;
+        items.append(desc);
+
+        // Connect signals
+        bool ok = connect(objInstance, SIGNAL(xChanged()), this, SLOT(slotHandleItemXChanged()));
+        if (!ok) {
+            qWarning() << "Failed to connect xChanged for" << qid;
+        }
+
+        // Connect backend generator
+        if (generators.contains(dataSource))
+        {
+            DataGenerator *gen = generators.value(dataSource);
+            connect(gen, &DataGenerator::signalValueChanged, this,
+                    [objInstance, qid](int newVal){
+                        objInstance->setProperty("displayText", QString::number(newVal));
+                        qDebug() << qid << "UI updated to" << newVal;
+                    });
+        }
+        else
+        {
+            qWarning() << "No backend generator for dataSource" << dataSource;
+        }
+    }
+
+    qInfo() << "Instantiated" << items.size() << "UI components";
+
+    // Debug: Check what's in the rootItem
+    QObjectList children = parentForItems->children();
+    qDebug() << "rootItem has" << children.size() << "children";
+    for (QObject *child : children) {
+        qDebug() << "Child:" << child << "type:" << child->metaObject()->className()
+        << "visible:" << child->property("visible").toBool();
+    }
+}
+
+void Manager::slotHandleItemXChanged()
+{
+    QObject *item = sender();
+    if (!item) return;
+
+    double x = item->property("x").toDouble();
+    double rootWidth = rootObject->property("width").toDouble();
+    double halfWidth = rootWidth / 2.0;
+
+    // Find the item description
+    ItemDesc *foundDesc = nullptr;
+    for (auto &desc : items) {
+        if (desc.qmlItem == item) {
+            foundDesc = &desc;
+            break;
+        }
+    }
+
+    if (!foundDesc || !generators.contains(foundDesc->dataSource)) {
+        return;
+    }
+
+    DataGenerator *gen = generators.value(foundDesc->dataSource);
+    if (x >= halfWidth) {
+        if (gen->isRunning()) {
+            gen->stop();
+            qInfo() << "Paused generator" << foundDesc->dataSource << "for item" << foundDesc->id << "(x=" << x << ")";
+        }
+    } else {
+        if (!gen->isRunning()) {
+            gen->start();
+            qInfo() << "Resumed generator" << foundDesc->dataSource << "for item" << foundDesc->id << "(x=" << x << ")";
+        }
+    }
+}

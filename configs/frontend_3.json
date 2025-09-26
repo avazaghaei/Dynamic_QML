@@ -1,0 +1,5 @@
+[
+  { "id": "box_1_1", "x": 10,  "y": 20,  "color-hex": "#4ab471", "dataSource": "data_1_1" },
+  { "id": "box_1_2", "x": 200, "y": 120, "color-hex": "#f29a2e", "dataSource": "data_1_2" },
+  { "id": "box_1_3", "x": 400, "y": 220, "color-hex": "#3778c2", "dataSource": "data_1_3" }
+]

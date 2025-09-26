@@ -1,0 +1,7 @@
+[
+  { "id": "data_1_1", "msec": 400, "min": 0, "max": 10 },
+  { "id": "data_1_2", "msec": 600, "min": 50, "max": 60 },
+  { "id": "data_1_3", "msec": 800, "min": 900, "max": 999 },
+  { "id": "data_1_4", "msec": 1200, "min": -100, "max": 100 },
+  { "id": "data_1_5", "msec": 1500, "min": 1000, "max": 2000 }
+]
