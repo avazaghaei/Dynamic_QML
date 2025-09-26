@@ -8,6 +8,7 @@
 #include <QQmlEngine>
 #include <QQmlContext>
 #include <QQmlComponent>
+#include <QDir>
 
 class DataGenerator;
 
@@ -16,6 +17,10 @@ class Manager : public QObject
     Q_OBJECT
 
 private:
+    QString backendConfig;
+    QString frontendConfig;
+
+
     struct ItemDesc
     {
         QObject *qmlItem = nullptr;
@@ -33,6 +38,8 @@ public:
     explicit Manager(QQmlEngine *engine, QObject *rootObject, QObject *parent = nullptr);
     ~Manager();
 
+    void getInputFileAddress();
+    void checkInputFileAddress();
     bool loadBackendConfig(const QString &path);
     bool loadFrontendConfig(const QString &path);
     void instantiateUIComponents();

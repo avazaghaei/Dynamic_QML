@@ -10,7 +10,16 @@
 
 Manager::Manager(QQmlEngine *engine, QObject *rootObject, QObject *parent)
     : QObject(parent), qmlEngine(engine), rootObject(rootObject)
-{}
+{
+    getInputFileAddress();
+    checkInputFileAddress();
+
+    loadBackendConfig(backendConfig);
+    loadFrontendConfig(frontendConfig);
+
+    instantiateUIComponents();
+
+}
 
 Manager::~Manager()
 {
@@ -22,6 +31,31 @@ Manager::~Manager()
         }
     }
     generators.clear();
+}
+
+void Manager::getInputFileAddress()
+{
+    // Use relative paths and check if files exist
+    backendConfig = QDir::currentPath() + "/configs/backend_5.json";
+    frontendConfig = QDir::currentPath() + "/configs/frontend_5.json";
+}
+
+void Manager::checkInputFileAddress()
+{
+    // Check if files exist
+    if (!QFile::exists(backendConfig))
+    {
+        qWarning() << "Backend config file not found:" << backendConfig;
+
+        // // Try absolute path
+        // backendConfig = QDir::currentPath() + "/configs/backend_3.json";
+    }
+
+    if (!QFile::exists(frontendConfig))
+    {
+        qWarning() << "Frontend config file not found:" << frontendConfig;
+        // frontendConfig = QDir::currentPath() + "/configs/frontend_3.json";
+    }
 }
 
 bool Manager::loadBackendConfig(const QString &path)
