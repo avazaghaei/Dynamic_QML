@@ -34,15 +34,16 @@ private:
     QList<ItemDesc> items;
     QString frontendConfigPath;
 
-public:
-    explicit Manager(QQmlEngine *engine, QObject *rootObject, QObject *parent = nullptr);
-    ~Manager();
-
+private:
     void getInputFileAddress();
     void checkInputFileAddress();
     bool loadBackendConfig(const QString &path);
     bool loadFrontendConfig(const QString &path);
     void instantiateUIComponents();
+
+public:
+    explicit Manager(QQmlEngine *engine, QObject *rootObject, QObject *parent = nullptr);
+    ~Manager();
 
 private slots:
     void slotHandleItemXChanged();

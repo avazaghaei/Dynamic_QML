@@ -10,7 +10,7 @@ class DataGenerator : public QObject
     Q_OBJECT
 
 public:
-    explicit DataGenerator(const QString &id, int intervalMs, int minVal, int maxVal, QObject *parent = nullptr);
+    explicit DataGenerator(const QString &id, int msec, int min, int max, QObject *parent = nullptr);
     ~DataGenerator();
 
     void start();
@@ -26,9 +26,9 @@ private slots:
 private:
     QString m_id;
     QTimer *m_timer;
-    int m_minVal;
-    int m_maxVal;
-    int m_currentValue;
+    int m_min;
+    int m_max;
+    int m_msec;
 };
 
 #endif // DATAGENERATOR_H

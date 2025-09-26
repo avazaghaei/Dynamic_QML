@@ -44,18 +44,10 @@ void Manager::checkInputFileAddress()
 {
     // Check if files exist
     if (!QFile::exists(backendConfig))
-    {
         qWarning() << "Backend config file not found:" << backendConfig;
 
-        // // Try absolute path
-        // backendConfig = QDir::currentPath() + "/configs/backend_3.json";
-    }
-
     if (!QFile::exists(frontendConfig))
-    {
         qWarning() << "Frontend config file not found:" << frontendConfig;
-        // frontendConfig = QDir::currentPath() + "/configs/frontend_3.json";
-    }
 }
 
 bool Manager::loadBackendConfig(const QString &path)
@@ -76,20 +68,24 @@ bool Manager::loadBackendConfig(const QString &path)
 
     for (const auto &v : doc.array())
     {
-        if (!v.isObject()) continue;
+        if (!v.isObject())
+            continue;
 
         QJsonObject obj = v.toObject();
-        QString id = obj.value("id").toString();
-        int msec = obj.value("msec").toInt(1000);
-        int minv = obj.value("min").toInt(0);
-        int maxv = obj.value("max").toInt(100);
 
-        if (id.isEmpty()) continue;
+        QString id  = obj.value("id").toString();
+        int msec    = obj.value("msec").toInt(1000);
+        int min     = obj.value("min").toInt(0);
+        int max     = obj.value("max").toInt(100);
 
-        auto gen = new DataGenerator(id, msec, minv, maxv, this);
+        if (id.isEmpty())
+            continue;
+
+        DataGenerator* gen = new DataGenerator(id, msec, min, max, this);
         gen->start();
         generators.insert(id, gen);
-        qDebug() << "Created generator:" << id << "interval:" << msec << "min:" << minv << "max:" << maxv;
+
+        qDebug() << "Created generator:" << id << "interval:" << msec << "min:" << min << "max:" << max;
     }
 
     qInfo() << "Loaded backend generators:" << generators.keys();

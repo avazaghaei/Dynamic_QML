@@ -1,11 +1,11 @@
 #include "datagenerator.h"
 #include <QDebug>
 
-DataGenerator::DataGenerator(const QString &id, int intervalMs, int minVal, int maxVal, QObject *parent)
-    : QObject(parent), m_id(id), m_minVal(minVal), m_maxVal(maxVal), m_currentValue(minVal)
+DataGenerator::DataGenerator(const QString &id, int msec, int min, int max, QObject *parent)
+    : QObject(parent), m_id(id), m_msec(msec), m_min(min), m_max(max)
 {
     m_timer = new QTimer(this);
-    m_timer->setInterval(intervalMs);
+    m_timer->setInterval(msec);
     connect(m_timer, &QTimer::timeout, this, &DataGenerator::generateValue);
 }
 
@@ -16,7 +16,8 @@ DataGenerator::~DataGenerator()
 
 void DataGenerator::start()
 {
-    if (!m_timer->isActive()) {
+    if (!m_timer->isActive())
+    {
         m_timer->start();
         qDebug() << "Generator" << m_id << "started";
     }
@@ -24,7 +25,8 @@ void DataGenerator::start()
 
 void DataGenerator::stop()
 {
-    if (m_timer->isActive()) {
+    if (m_timer->isActive())
+    {
         m_timer->stop();
         qDebug() << "Generator" << m_id << "stopped";
     }
@@ -37,7 +39,7 @@ bool DataGenerator::isRunning() const
 
 void DataGenerator::generateValue()
 {
-    m_currentValue = QRandomGenerator::global()->bounded(m_minVal, m_maxVal + 1);
-    qDebug() << m_id << "value changed to" << m_currentValue;
-    emit signalValueChanged(m_currentValue);
+    int current = QRandomGenerator::global()->bounded(m_min, m_max + 1);
+    qDebug() << m_id << "value changed to" << current;
+    emit signalValueChanged(current);
 }
