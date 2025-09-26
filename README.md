@@ -56,36 +56,19 @@ A sophisticated Qt6 application demonstrating real-time integration between C++ 
 - CMake (latest version)
 - C++17 compatible compiler
 
-### 🎯 Running the Application:
+### Running the Application:
 
 1. Build the project using the steps above
-
 2. Copy the configs/ folder to your build output directory
-
 3. Run the executable:
 
 ### Debugging Tips:
 
 • Check the console output for error messages
-
 • Verify all JSON files are valid using a JSON validator
-
 • Ensure the configs/ folder path is correct relative to the executable
-
 • Look for QML component creation errors in the console
 
-## Required File Structure:
-
-	[Your Build Directory]/
-	├── Project.exe (or Project executable)
-	└── configs/
-	├── backend_1.json
-	├── backend_3.json
-	├── backend_5.json
-	├── frontend_1.json
-	├── frontend_3.json
-	└── frontend_5.json
-	
 ## 📊 Configuration Files
 
 The application uses two types of configuration files:
@@ -111,13 +94,23 @@ The application uses two types of configuration files:
     }
 ]
 
-
-### ⚠️ Critical Configuration Requirement
+## ⚠️ Critical Configuration Requirement
 
 **🚨 IMPORTANT: Config files must be located in the executable directory!**
-
 For the application to work correctly, you **MUST** place the `configs/` folder containing all JSON files in the same directory as your executable file.
-	
+
+### Required File Structure:
+
+	[Your Build Directory]/
+	├── Project.exe (or Project executable)
+	└── configs/
+	├── backend_1.json
+	├── backend_3.json
+	├── backend_5.json
+	├── frontend_1.json
+	├── frontend_3.json
+	└── frontend_5.json
+
 ### 🔧 If MovableBoxes Don't Show Up:
 If the MovableBox components are not visible on the UI, **the most common cause is missing or misplaced config files**. Please verify:
 
