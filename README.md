@@ -65,8 +65,11 @@ A sophisticated Qt6 application demonstrating real-time integration between C++ 
 ### Debugging Tips:
 
 • Check the console output for error messages
+
 • Verify all JSON files are valid using a JSON validator
+
 • Ensure the configs/ folder path is correct relative to the executable
+
 • Look for QML component creation errors in the console
 
 ## 📊 Configuration Files
@@ -130,7 +133,7 @@ If you encounter any issues:
 3. Ensure all prerequisites are installed correctly
 
 
-##🎯 Success Criteria
+## 🎯 Success Criteria
 
 ### When the application runs correctly, you should see:
 
