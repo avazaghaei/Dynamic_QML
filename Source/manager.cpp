@@ -1,12 +1,5 @@
 #include "manager.h"
-#include "datagenerator.h"
-#include <QFile>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QVariant>
-#include <QDebug>
-#include <QMetaObject>
+
 
 Manager::Manager(QQmlEngine *engine, QObject *rootObject, QObject *parent)
     : QObject(parent), qmlEngine(engine), rootObject(rootObject)
@@ -125,32 +118,30 @@ void Manager::initUiComponents()
     QObject *parentForItems = rootObject->findChild<QObject*>("rootItem");
     if (!parentForItems)
     {
-        qWarning() << "Could not find rootItem, searching for alternative container...";
-        // Try to find any suitable container
-        parentForItems = rootObject;
+        qWarning() << "Could not find rootItem";
+        return;
     }
-
-    qDebug() << "Using parent for items:" << parentForItems->objectName()
-             << "Type:" << parentForItems->metaObject()->className()
-             << "Width:" << parentForItems->property("width").toDouble();
 
     for (const auto &v : doc.array())
     {
-        if (!v.isObject()) continue;
+        if (!v.isObject())
+            continue;
 
         QJsonObject obj = v.toObject();
-        QString qid = obj.value("id").toString();
-        double x = obj.value("x").toDouble(0);
-        double y = obj.value("y").toDouble(0);
-        QString colorHex = obj.value("color-hex").toString("#4ab471");
-        QString dataSource = obj.value("dataSource").toString();
 
-        if (qid.isEmpty()) {
+        QString id          = obj.value("id").toString();
+        double x            = obj.value("x").toDouble(0);
+        double y            = obj.value("y").toDouble(0);
+        QString colorHex    = obj.value("color-hex").toString("#4ab471");
+        QString dataSource  = obj.value("dataSource").toString();
+
+        if (id.isEmpty())
+        {
             qWarning() << "Skipping item with empty id";
             continue;
         }
 
-        qDebug() << "Creating box:" << qid << "at (" << x << "," << y << ")";
+        qDebug() << "Creating box:" << id << "at (" << x << "," << y << ")";
 
         // Create component
         QQmlComponent component(qmlEngine, QUrl(QStringLiteral("qrc:/MovableBox.qml")));
@@ -166,7 +157,7 @@ void Manager::initUiComponents()
 
         if (!objInstance)
         {
-            qWarning() << "Failed to create MovableBox instance for" << qid;
+            qWarning() << "Failed to create MovableBox instance for" << id;
             delete context;
             continue;
         }
@@ -175,7 +166,7 @@ void Manager::initUiComponents()
         objInstance->setProperty("parent", QVariant::fromValue(parentForItems));
 
         // Set properties
-        objInstance->setProperty("objectId", qid);
+        objInstance->setProperty("objectId", id);
         objInstance->setProperty("x", x);
         objInstance->setProperty("y", y);
         objInstance->setProperty("colorHex", colorHex);
@@ -191,14 +182,14 @@ void Manager::initUiComponents()
         // Track the item
         ItemDesc desc;
         desc.qmlItem = objInstance;
-        desc.id = qid;
+        desc.id = id;
         desc.dataSource = dataSource;
         items.append(desc);
 
         // Connect signals
         bool ok = connect(objInstance, SIGNAL(xChanged()), this, SLOT(slotHandleItemXChanged()));
         if (!ok) {
-            qWarning() << "Failed to connect xChanged for" << qid;
+            qWarning() << "Failed to connect xChanged for" << id;
         }
 
         // Connect backend generator
@@ -206,9 +197,9 @@ void Manager::initUiComponents()
         {
             DataGenerator *gen = listGenerators.value(dataSource);
             connect(gen, &DataGenerator::signalValueChanged, this,
-                    [objInstance, qid](int newVal){
+                    [objInstance, id](int newVal){
                         objInstance->setProperty("displayText", QString::number(newVal));
-                        qDebug() << qid << "UI updated to" << newVal;
+                        qDebug() << id << "UI updated to" << newVal;
                     });
         }
         else

@@ -9,8 +9,14 @@
 #include <QQmlContext>
 #include <QQmlComponent>
 #include <QDir>
-
-class DataGenerator;
+#include "datagenerator.h"
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QVariant>
+#include <QDebug>
+#include <QMetaObject>
 
 class Manager : public QObject
 {
