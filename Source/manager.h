@@ -46,7 +46,10 @@ private:
     bool loadBackendConfig();
     QJsonDocument checkFile(const QString &path);
     bool loadFrontendConfig();
-    void initUiComponents();
+    bool initUiComponents();
+    QObject* findRootQmlItem();
+    QQmlComponent* initQmlComponent();
+    QQmlContext* initQmlContext();
 
 public:
     explicit Manager(QQmlEngine *engine, QObject *rootObject, QObject *parent = nullptr);

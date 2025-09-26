@@ -7,10 +7,14 @@ Manager::Manager(QQmlEngine *engine, QObject *rootObject, QObject *parent)
     getInputFileAddress();
     checkInputFileAddress();
 
-    loadBackendConfig();
-    loadFrontendConfig();
+    if(!loadBackendConfig())
+        return;
 
-    initUiComponents();
+    if(!loadFrontendConfig())
+        return;
+
+    if(!initUiComponents())
+        return;
 
 }
 
@@ -107,19 +111,21 @@ bool Manager::loadFrontendConfig()
     return true;
 }
 
-void Manager::initUiComponents()
+bool Manager::initUiComponents()
 { 
     QJsonDocument doc = checkFile(frontendConfig);
     if(doc.isNull())
-        return;
+        return false;
 
-    // Find the container for items
-    QObject *parentForItems = rootObject->findChild<QObject*>("rootItem");
-    if (!parentForItems)
-    {
-        qWarning() << "Could not find rootItem";
-        return;
-    }
+    QObject *parentForItems = findRootQmlItem();
+    if(parentForItems == nullptr)
+        return false;
+
+    QQmlComponent* component = initQmlComponent();
+    if(component == nullptr)
+        return false;
+
+    QQmlContext *context = initQmlContext();
 
     for (const auto &v : doc.array())
     {
@@ -142,17 +148,10 @@ void Manager::initUiComponents()
 
         qDebug() << "Creating box:" << id << "at (" << x << "," << y << ")";
 
-        // Create component
-        QQmlComponent component(qmlEngine, QUrl(QStringLiteral("qrc:/MovableBox.qml")));
-        if (component.isError())
-        {
-            qWarning() << "Failed to load MovableBox.qml:" << component.errors();
-            continue;
-        }
 
-        // Create object with parent context
-        QQmlContext *context = new QQmlContext(qmlEngine->rootContext());
-        QObject *objInstance = component.create(context);
+
+
+        QObject *objInstance = component->create(context);
 
         if (!objInstance)
         {
@@ -216,6 +215,40 @@ void Manager::initUiComponents()
         qDebug() << "Child:" << child << "type:" << child->metaObject()->className()
         << "visible:" << child->property("visible").toBool();
     }
+
+    return true;
+}
+
+QObject* Manager::findRootQmlItem()
+{
+    // Find the container for items
+    QObject *parentForItems = rootObject->findChild<QObject*>("rootItem");
+    if (!parentForItems)
+    {
+        qWarning() << "Could not find rootItem";
+        return nullptr;
+    }
+    return parentForItems;
+}
+
+QQmlComponent *Manager::initQmlComponent()
+{
+    // Create component
+    QQmlComponent* component = new QQmlComponent(qmlEngine, QUrl(QStringLiteral("qrc:/MovableBox.qml")));
+    if (component->isError())
+    {
+        qWarning() << "Failed to load MovableBox.qml:" << component->errors();
+        return nullptr;
+    }
+    return component;
+}
+
+QQmlContext *Manager::initQmlContext()
+{
+    // Create object with parent context
+    QQmlContext *context = new QQmlContext(qmlEngine->rootContext());
+
+    return context;
 }
 
 void Manager::slotHandleItemXChanged()
