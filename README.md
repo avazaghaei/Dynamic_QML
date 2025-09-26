@@ -1,7 +1,5 @@
 # Qt6 QML/C++ Dynamic Component System (Qt/C++/QML)
 
-This C# console application demonstrates the implementation of the Command design pattern to create a flexible and extensible command processor. It supports a variety of operations—increment, decrement, double, random addition—and includes an undo feature to revert the most recent command. The project emphasizes clean code architecture, efficient memory usage through design patterns (such as the Singleton), and object-oriented best practices.
-
 ## 📋 Project Overview
 A sophisticated Qt6 application demonstrating real-time integration between C++ backend and QML frontend. The system dynamically creates UI components based on JSON configuration files and implements intelligent position-based data flow control.
 
