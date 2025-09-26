@@ -15,14 +15,6 @@ Window {
         anchors.top : parent.top
         color: "#222"
     }
-    // Rectangle {
-    //     anchors.left: parent.width/2
-    //     anchors.right: parent.right
-    //     anchors.bottom: parent.bottom
-    //     anchors.top: parent.top
-
-    //     color: "#111"
-    // }
 
     // Container for dynamically created MovableBoxes
     Item {

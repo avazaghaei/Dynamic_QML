@@ -48,28 +48,28 @@ Rectangle {
         }
     }
 
-    onParentChanged: {
-        if (parent) {
-            windowWidth = parent.width
-            console.log("Box", objectId, "parent set, width:", windowWidth)
-        }
-    }
+    // onParentChanged: {
+    //     if (parent) {
+    //         windowWidth = parent.width
+    //         console.log("Box", objectId, "parent set, width:", windowWidth)
+    //     }
+    // }
 
-    Component.onCompleted: {
-        console.log("Box", objectId, "completed at", x, y, "color:", colorHex)
-        if (parent) {
-            windowWidth = parent.width
-        }
-    }
+    // Component.onCompleted: {
+    //     console.log("Box", objectId, "completed at", x, y, "color:", colorHex)
+    //     if (parent) {
+    //         windowWidth = parent.width
+    //     }
+    // }
 
     // Update window width when parent width changes
-    Connections {
-        target: parent
-        enabled: parent !== null
-        function onWidthChanged() {
-            if (parent) {
-                windowWidth = parent.width
-            }
-        }
-    }
+    // Connections {
+    //     target: parent
+    //     enabled: parent !== null
+    //     function onWidthChanged() {
+    //         if (parent) {
+    //             windowWidth = parent.width
+    //         }
+    //     }
+    // }
 }
