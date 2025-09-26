@@ -117,104 +117,17 @@ bool Manager::initUiComponents()
     if(doc.isNull())
         return false;
 
-    QObject *parentForItems = findRootQmlItem();
+    parentForItems = findRootQmlItem();
     if(parentForItems == nullptr)
         return false;
 
-    QQmlComponent* component = initQmlComponent();
+    component = initQmlComponent();
     if(component == nullptr)
         return false;
 
-    QQmlContext *context = initQmlContext();
+    context = initQmlContext();
 
-    for (const auto &v : doc.array())
-    {
-        if (!v.isObject())
-            continue;
-
-        QJsonObject obj = v.toObject();
-
-        QString id          = obj.value("id").toString();
-        double x            = obj.value("x").toDouble(0);
-        double y            = obj.value("y").toDouble(0);
-        QString colorHex    = obj.value("color-hex").toString("#4ab471");
-        QString dataSource  = obj.value("dataSource").toString();
-
-        if (id.isEmpty())
-        {
-            qWarning() << "Skipping item with empty id";
-            continue;
-        }
-
-        qDebug() << "Creating box:" << id << "at (" << x << "," << y << ")";
-
-
-
-
-        QObject *objInstance = component->create(context);
-
-        if (!objInstance)
-        {
-            qWarning() << "Failed to create MovableBox instance for" << id;
-            delete context;
-            continue;
-        }
-
-        // CRITICAL: Set the visual parent using QML engine method
-        objInstance->setProperty("parent", QVariant::fromValue(parentForItems));
-
-        // Set properties
-        objInstance->setProperty("objectId", id);
-        objInstance->setProperty("x", x);
-        objInstance->setProperty("y", y);
-        objInstance->setProperty("colorHex", colorHex);
-        objInstance->setProperty("dataSource", dataSource);
-        objInstance->setProperty("displayText", "0");
-
-        // Verify properties were set
-        qDebug() << "Box created - x:" << objInstance->property("x").toDouble()
-                 << "y:" << objInstance->property("y").toDouble()
-                 << "visible:" << objInstance->property("visible").toBool()
-                 << "color:" << objInstance->property("colorHex").toString();
-
-        // Track the item
-        ItemDesc desc;
-        desc.qmlItem = objInstance;
-        desc.id = id;
-        desc.dataSource = dataSource;
-        items.append(desc);
-
-        // Connect signals
-        bool ok = connect(objInstance, SIGNAL(xChanged()), this, SLOT(slotHandleItemXChanged()));
-        if (!ok) {
-            qWarning() << "Failed to connect xChanged for" << id;
-        }
-
-        // Connect backend generator
-        if (listGenerators.contains(dataSource))
-        {
-            DataGenerator *gen = listGenerators.value(dataSource);
-            connect(gen, &DataGenerator::signalValueChanged, this,
-                    [objInstance, id](int newVal){
-                        objInstance->setProperty("displayText", QString::number(newVal));
-                        qDebug() << id << "UI updated to" << newVal;
-                    });
-        }
-        else
-        {
-            qWarning() << "No backend generator for dataSource" << dataSource;
-        }
-    }
-
-    qInfo() << "Instantiated" << items.size() << "UI components";
-
-    // Debug: Check what's in the rootItem
-    QObjectList children = parentForItems->children();
-    qDebug() << "rootItem has" << children.size() << "children";
-    for (QObject *child : children) {
-        qDebug() << "Child:" << child << "type:" << child->metaObject()->className()
-        << "visible:" << child->property("visible").toBool();
-    }
+    readFrontendJson(doc);
 
     return true;
 }
@@ -249,6 +162,93 @@ QQmlContext *Manager::initQmlContext()
     QQmlContext *context = new QQmlContext(qmlEngine->rootContext());
 
     return context;
+}
+
+void Manager::readFrontendJson(QJsonDocument doc)
+{
+    for (const auto &v : doc.array())
+    {
+        if (!v.isObject())
+            continue;
+
+        QJsonObject obj = v.toObject();
+
+        QString id          = obj.value("id").toString();
+        double x            = obj.value("x").toDouble(0);
+        double y            = obj.value("y").toDouble(0);
+        QString colorHex    = obj.value("color-hex").toString("#4ab471");
+        QString dataSource  = obj.value("dataSource").toString();
+
+        if (id.isEmpty())
+        {
+            qWarning() << "Skipping item with empty id";
+            continue;
+        }
+
+        QObject *objInstance = makeQmlObject(id, x, y, colorHex, dataSource);
+        if(objInstance == nullptr)
+            continue;
+
+        qDebug() << "Creating box:" << id << "at (" << x << "," << y << ")";
+
+        trackQmlObkect(objInstance, id, dataSource);
+    }
+
+    qInfo() << "Instantiated" << items.size() << "UI components";
+
+}
+
+QObject* Manager::makeQmlObject(QString id, double x, double y, QString colorHex, QString dataSource)
+{
+    QObject *objInstance = component->create(context);
+
+    if (!objInstance)
+    {
+        qWarning() << "Failed to create MovableBox instance for" << id;
+        delete context;
+        return nullptr;
+    }
+
+    // CRITICAL: Set the visual parent using QML engine method
+    objInstance->setProperty("parent", QVariant::fromValue(parentForItems));
+
+    // Set properties
+    objInstance->setProperty("objectId", id);
+    objInstance->setProperty("x", x);
+    objInstance->setProperty("y", y);
+    objInstance->setProperty("colorHex", colorHex);
+    objInstance->setProperty("dataSource", dataSource);
+    objInstance->setProperty("displayText", "0");
+
+    // Connect signals
+    connect(objInstance, SIGNAL(xChanged()), this, SLOT(slotHandleItemXChanged()));
+
+    return objInstance;
+}
+
+void Manager::trackQmlObkect(QObject* objInstance, QString id, QString dataSource)
+{
+    // Track the item
+    ItemDesc desc;
+    desc.qmlItem = objInstance;
+    desc.id = id;
+    desc.dataSource = dataSource;
+    items.append(desc);
+
+    // Connect backend generator
+    if (listGenerators.contains(dataSource))
+    {
+        DataGenerator *gen = listGenerators.value(dataSource);
+        connect(gen, &DataGenerator::signalValueChanged, this,
+                [objInstance, id](int newVal){
+                    objInstance->setProperty("displayText", QString::number(newVal));
+                    qDebug() << id << "UI updated to" << newVal;
+                });
+    }
+    else
+    {
+        qWarning() << "No backend generator for dataSource" << dataSource;
+    }
 }
 
 void Manager::slotHandleItemXChanged()

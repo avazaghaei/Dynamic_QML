@@ -40,6 +40,11 @@ private:
     QList<ItemDesc> items;
     QString frontendConfigPath;
 
+    QObject *parentForItems;
+    QQmlComponent *component;
+    QQmlContext *context;
+
+
 private:
     void getInputFileAddress();
     void checkInputFileAddress();
@@ -50,6 +55,10 @@ private:
     QObject* findRootQmlItem();
     QQmlComponent* initQmlComponent();
     QQmlContext* initQmlContext();
+    void readFrontendJson(QJsonDocument doc);
+    QObject* makeQmlObject(QString id, double x, double y, QString colorHex, QString dataSource);
+    void trackQmlObkect(QObject* objInstance, QString id, QString dataSource);
+
 
 public:
     explicit Manager(QQmlEngine *engine, QObject *rootObject, QObject *parent = nullptr);
