@@ -1,9 +1,25 @@
-import QtQuick 2.15
-import QtQuick.Window 2.15
-
+import QtQuick
+import QtQuick.Window
 Window {
-    width: 640
+    id: rootWindow
+    width: 800
     height: 480
     visible: true
-    title: qsTr("Hello World")
+    title: "Data Generator Demo"
+
+    // A simple background
+    Rectangle {
+        width : (parent.width) / 2
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.top : parent.top
+        color: "#222"
+    }
+
+    // Container for dynamically created MovableBoxes
+    Item {
+        id: rootItem
+        anchors.fill: parent
+        objectName: "rootItem"
+    }
 }

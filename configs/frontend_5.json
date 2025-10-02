@@ -1,0 +1,37 @@
+[
+    {
+        "id": "box1",
+        "x": 50,
+        "y": 50,
+        "color-hex": "#FF5733",
+        "dataSource": "generator1"
+    },
+    {
+        "id": "box2",
+        "x": 200,
+        "y": 100,
+        "color-hex": "#33FF57",
+        "dataSource": "generator2"
+    },
+    {
+        "id": "box3",
+        "x": 350,
+        "y": 150,
+        "color-hex": "#3357FF",
+        "dataSource": "generator3"
+    },
+    {
+        "id": "box4",
+        "x": 150,
+        "y": 250,
+        "color-hex": "#F0FF33",
+        "dataSource": "generator4"
+    },
+    {
+        "id": "box5",
+        "x": 300,
+        "y": 300,
+        "color-hex": "#FF33F0",
+        "dataSource": "generator5"
+    }
+]
